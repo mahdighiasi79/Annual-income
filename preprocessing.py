@@ -2,7 +2,7 @@ import math
 import pandas as pd
 
 
-def PrepareAttributes(file_name):
+def PrepareAttributes(file_name, destination_path):
     df = pd.read_csv(file_name)
 
     # age
@@ -94,9 +94,9 @@ def PrepareAttributes(file_name):
         else:
             df.at[i, "hours-per-week"] = "very_high"
 
-    df.to_csv("preprocessed_dataset.csv")
+    df.to_csv(destination_path)
 
 
 if __name__ == "__main__":
-    PrepareAttributes("Dataset1.csv")
-    PrepareAttributes("Dataset1_Unknown.csv")
+    PrepareAttributes("Dataset1.csv", "preprocessed_dataset.csv")
+    PrepareAttributes("Dataset1_Unknown.csv", "preprocessed_test_set.csv")

@@ -150,29 +150,42 @@ def PrintDT(root):
 
 
 if __name__ == "__main__":
+    # # build tree
     # train_set = []
     # for i in range(math.floor(0.9 * len(df))):
     #     train_set.append(i)
     # root_node = Node(train_set, None, None)
     # Build_DT(root_node, features, 0)
     #
+    # # saving the built model into a file
     # with open("decision_tree.pkl", "wb") as file:
     #     pickle.dump(root_node, file)
     #     file.close()
 
+    # loading the model from file
     with open("decision_tree.pkl", "rb") as file:
         decision_tree = pickle.load(file)
         file.close()
 
-    # cross_validation_set = []
-    # for i in range(math.floor(0.9 * len(df)), len(df)):
-    #     cross_validation_set.append(i)
-    #
-    # true_predictions = 0
-    # for record_id in cross_validation_set:
-    #     label = df["income"][record_id]
-    #     predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
-    #     if label == predicted_label:
-    #         true_predictions += 1
-    # accuracy = (true_predictions / len(cross_validation_set)) * 100
-    # print(accuracy)
+    # cross validation testing and hyperparameter setting
+    cross_validation_set = []
+    for i in range(math.floor(0.9 * len(df)), len(df)):
+        cross_validation_set.append(i)
+
+    true_predictions = 0
+    for record_id in cross_validation_set:
+        label = df["income"][record_id]
+        predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
+        if label == predicted_label:
+            true_predictions += 1
+    accuracy = (true_predictions / len(cross_validation_set)) * 100
+    print("cross validation accuracy", accuracy)
+    print()
+
+    # test set evaluation
+    predictions = []
+    test_set = pd.read_csv("preprocessed_test_set.csv")
+    for i in range(len(test_set)):
+        prediction = Predict(decision_tree, test_set.iloc(0)[i])
+        predictions.append(prediction)
+    print("test set predictions:\n", predictions)
