@@ -1,17 +1,44 @@
+import copy
 import helper_functions as hf
 import numpy as np
 import pandas as pd
 
 df = pd.read_csv("preprocessed_dataset.csv")
+features = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status", "occupation", "relationship", "race", "sex",
+            "capital-gain", "capital-loss", "hours-per-week", "native-country"]
+
+# hyperparameters
+depth_threshold = 10
 
 
 class Node:
 
-    def __init__(self, attribute, records, parent):
-        self.attribute = attribute
+    def __init__(self, records, parent, branch):
+        self.attribute = None
         self.records = records
         self.parent = parent
+        self.branch = branch
         self.children = []
+        self.label = None
+
+
+def Split(parent):
+    attribute = parent.attribute
+    feature = df[attribute]
+    values = hf.ExtractValues(feature)
+
+    children = []
+    for value in values.keys():
+        child_records = []
+
+        for element in parent.records:
+            if feature[element] == value:
+                child_records.append(element)
+
+        if len(child_records) != 0:
+            children.append(Node(child_records, parent, value))
+
+    return children
 
 
 def GINI(node):
@@ -32,18 +59,7 @@ def GINI(node):
 
 
 def GINI_spilt(parent):
-    attribute = parent.attribute
-    feature = df[attribute]
-    values = hf.ExtractValues(attribute)
-
-    children = []
-    for value in values.keys():
-        child = []
-        for element in parent.records:
-            if feature[element] == value:
-                child.append(element)
-        children.append(Node("", child, parent))
-
+    children = Split(parent)
     gini_split = 0
     for child_node in children:
         gini_split += len(child_node.records) * GINI(child_node)
@@ -51,5 +67,54 @@ def GINI_spilt(parent):
     return gini_split
 
 
+def Build_DT(root, unexpanded_features, depth):
+    labels = df["income"]
+    class1 = 0
+    class2 = 0
+    for element in root.records:
+        if labels[element] == "<=50K":
+            class1 += 1
+        else:
+            class2 += 1
+
+    if depth >= depth_threshold or len(unexpanded_features) == 0 or class1 == 0 or class2 == 0:
+        root.children = None
+        if class1 > class2:
+            root.label = "<=50K"
+        else:
+            root.label = ">50K"
+        return
+
+    biggest_gini = -np.inf
+    feature_to_expand = ""
+    for feature in unexpanded_features:
+        root.attribute = feature
+        gini_split = GINI_spilt(root)
+        if gini_split >= biggest_gini:
+            biggest_gini = gini_split
+            feature_to_expand = feature
+
+    root.attribute = feature_to_expand
+    root.children = Split(root)
+
+    if len(root.children) == 0:
+        root.children = None
+        if class1 > class2:
+            root.label = "<=50K"
+        else:
+            root.label = ">50K"
+        return
+
+    unexpanded_features_copy = copy.deepcopy(unexpanded_features)
+    unexpanded_features_copy.remove(feature_to_expand)
+
+    for child in root.children:
+        Build_DT(child, unexpanded_features_copy, depth + 1)
+
+
 if __name__ == "__main__":
-    print()
+    root_records = []
+    for i in range(len(df)):
+        root_records.append(i)
+    root_node = Node(root_records, None, None)
+    Build_DT(root_node, features, 0)

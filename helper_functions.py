@@ -5,9 +5,7 @@ import pandas as pd
 outlier_threshold = 0.0001
 
 
-def ExtractValues(attribute):
-    df = pd.read_csv("Dataset1.csv")
-    feature = df[attribute]
+def ExtractValues(feature):
     values = {}
     for value in feature:
         if values.get(value) is None:
