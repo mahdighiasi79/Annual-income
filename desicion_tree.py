@@ -1,14 +1,16 @@
-import copy
 import helper_functions as hf
-import numpy as np
 import pandas as pd
+import numpy as np
+import pickle
+import copy
+import math
 
 df = pd.read_csv("preprocessed_dataset.csv")
 features = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status", "occupation", "relationship", "race", "sex",
             "capital-gain", "capital-loss", "hours-per-week", "native-country"]
 
 # hyperparameters
-depth_threshold = 10
+depth_threshold = 3
 
 
 class Node:
@@ -85,13 +87,13 @@ def Build_DT(root, unexpanded_features, depth):
             root.label = ">50K"
         return
 
-    biggest_gini = -np.inf
+    lowest_gini = np.inf
     feature_to_expand = ""
     for feature in unexpanded_features:
         root.attribute = feature
         gini_split = GINI_spilt(root)
-        if gini_split >= biggest_gini:
-            biggest_gini = gini_split
+        if gini_split <= lowest_gini:
+            lowest_gini = gini_split
             feature_to_expand = feature
 
     root.attribute = feature_to_expand
@@ -99,6 +101,7 @@ def Build_DT(root, unexpanded_features, depth):
 
     if len(root.children) == 0:
         root.children = None
+        root.attribute = None
         if class1 > class2:
             root.label = "<=50K"
         else:
@@ -112,9 +115,64 @@ def Build_DT(root, unexpanded_features, depth):
         Build_DT(child, unexpanded_features_copy, depth + 1)
 
 
+def Predict(node, record):
+    if node.label is not None:
+        return node.label
+
+    attribute = node.attribute
+    value = record[attribute]
+    for child in node.children:
+        if child.branch == value:
+            return Predict(child, record)
+
+    labels = df["income"]
+    class1 = 0
+    class2 = 0
+    for element in node.records:
+        if labels[element] == "<=50K":
+            class1 += 1
+        else:
+            class2 += 1
+    if class1 > class2:
+        return "<=50K"
+    else:
+        return ">50K"
+
+
+def PrintDT(root):
+    if root.label is not None:
+        print(root.label)
+        return
+
+    print(root.attribute)
+    for child in root.children:
+        PrintDT(child)
+
+
 if __name__ == "__main__":
-    root_records = []
-    for i in range(len(df)):
-        root_records.append(i)
-    root_node = Node(root_records, None, None)
-    Build_DT(root_node, features, 0)
+    # train_set = []
+    # for i in range(math.floor(0.9 * len(df))):
+    #     train_set.append(i)
+    # root_node = Node(train_set, None, None)
+    # Build_DT(root_node, features, 0)
+    #
+    # with open("decision_tree.pkl", "wb") as file:
+    #     pickle.dump(root_node, file)
+    #     file.close()
+
+    with open("decision_tree.pkl", "rb") as file:
+        decision_tree = pickle.load(file)
+        file.close()
+
+    # cross_validation_set = []
+    # for i in range(math.floor(0.9 * len(df)), len(df)):
+    #     cross_validation_set.append(i)
+    #
+    # true_predictions = 0
+    # for record_id in cross_validation_set:
+    #     label = df["income"][record_id]
+    #     predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
+    #     if label == predicted_label:
+    #         true_predictions += 1
+    # accuracy = (true_predictions / len(cross_validation_set)) * 100
+    # print(accuracy)

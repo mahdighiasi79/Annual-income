@@ -2,8 +2,8 @@ import math
 import pandas as pd
 
 
-def PrepareAttributes():
-    df = pd.read_csv("Dataset1.csv")
+def PrepareAttributes(file_name):
+    df = pd.read_csv(file_name)
 
     # age
     age = df["age"]
@@ -98,4 +98,5 @@ def PrepareAttributes():
 
 
 if __name__ == "__main__":
-    PrepareAttributes()
+    PrepareAttributes("Dataset1.csv")
+    PrepareAttributes("Dataset1_Unknown.csv")
