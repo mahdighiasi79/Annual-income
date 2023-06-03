@@ -100,6 +100,5 @@ def PrepareAttributes(file_name, destination_path):
 
 
 if __name__ == "__main__":
-    # PrepareAttributes("Dataset1.csv", "preprocessed_dataset.csv")
-    # PrepareAttributes("Dataset1_Unknown.csv", "preprocessed_test_set.csv")
-    print(np.arange(1, 3))
+    PrepareAttributes("Dataset1.csv", "preprocessed_dataset.csv")
+    PrepareAttributes("Dataset1_Unknown.csv", "preprocessed_test_set.csv")

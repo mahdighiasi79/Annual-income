@@ -54,15 +54,15 @@ def HasMissingValue(attribute):
 #     sorted_informativeness = sorted(information.values())
 #     print(sorted_informativeness)
 
-    # while True:
-    #     query = input()
-    #     if query == "informativeness":
-    #         print(informative_values[input()])
-    #     elif query == "value":
-    #         i = int(input())
-    #         for key in information.keys():
-    #             if math.floor(information[key]) == i:
-    #                 print(key)
+# while True:
+#     query = input()
+#     if query == "informativeness":
+#         print(informative_values[input()])
+#     elif query == "value":
+#         i = int(input())
+#         for key in information.keys():
+#             if math.floor(information[key]) == i:
+#                 print(key)
 
 
 def MeanVariance(feature):
