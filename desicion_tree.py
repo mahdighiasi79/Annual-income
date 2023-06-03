@@ -10,7 +10,7 @@ features = ["age", "workclass", "fnlwgt", "education", "education-num", "marital
             "capital-gain", "capital-loss", "hours-per-week", "native-country"]
 
 # hyperparameters
-depth_threshold = 3
+depth_threshold = 4
 
 
 class Node:
@@ -152,7 +152,7 @@ def PrintDT(root):
 if __name__ == "__main__":
     # # build tree
     # train_set = []
-    # for i in range(math.floor(0.9 * len(df))):
+    # for i in range(math.floor(0.8 * len(df))):
     #     train_set.append(i)
     # root_node = Node(train_set, None, None)
     # Build_DT(root_node, features, 0)
@@ -168,24 +168,53 @@ if __name__ == "__main__":
         file.close()
 
     # cross validation testing and hyperparameter setting
-    cross_validation_set = []
-    for i in range(math.floor(0.9 * len(df)), len(df)):
-        cross_validation_set.append(i)
-
-    true_predictions = 0
-    for record_id in cross_validation_set:
-        label = df["income"][record_id]
-        predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
-        if label == predicted_label:
-            true_predictions += 1
-    accuracy = (true_predictions / len(cross_validation_set)) * 100
-    print("cross validation accuracy", accuracy)
-    print()
+    # cross_validation_set = []
+    # for i in range(math.floor(0.8 * len(df)), math.floor(0.9 * len(df))):
+    #     cross_validation_set.append(i)
+    #
+    # true_positives = 0
+    # false_positives = 0
+    # false_negatives = 0
+    # for record_id in cross_validation_set:
+    #     label = df["income"][record_id]
+    #     predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
+    #     if label == ">50K":
+    #         if predicted_label == ">50K":
+    #             true_positives += 1
+    #         else:
+    #             false_negatives += 1
+    #     else:
+    #         if predicted_label == ">50K":
+    #             false_positives += 1
+    # precision = true_positives / (true_positives + false_positives)
+    # recall = true_positives / (true_positives + false_negatives)
+    # f1_score = (precision * recall) / (precision + recall)
+    # print("precision:", precision)
+    # print("recall:", recall)
+    # print("f1 score:", f1_score)
 
     # test set evaluation
-    predictions = []
-    test_set = pd.read_csv("preprocessed_test_set.csv")
-    for i in range(len(test_set)):
-        prediction = Predict(decision_tree, test_set.iloc(0)[i])
-        predictions.append(prediction)
-    print("test set predictions:\n", predictions)
+    test_set = []
+    for i in range(math.floor(0.9 * len(df)), len(df)):
+        test_set.append(i)
+
+    true_positives = 0
+    false_positives = 0
+    false_negatives = 0
+    for record_id in test_set:
+        label = df["income"][record_id]
+        predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
+        if label == ">50K":
+            if predicted_label == ">50K":
+                true_positives += 1
+            else:
+                false_negatives += 1
+        else:
+            if predicted_label == ">50K":
+                false_positives += 1
+    precision = 100 * true_positives / (true_positives + false_positives)
+    recall = 100 * true_positives / (true_positives + false_negatives)
+    f1_score = (precision * recall) / (precision + recall)
+    print("precision:", precision)
+    print("recall:", recall)
+    print("f1 score:", f1_score)

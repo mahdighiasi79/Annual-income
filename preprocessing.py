@@ -1,6 +1,8 @@
 import math
 import pandas as pd
 
+import helper_functions
+
 
 def PrepareAttributes(file_name, destination_path):
     df = pd.read_csv(file_name)
