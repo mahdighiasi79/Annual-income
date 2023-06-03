@@ -6,11 +6,9 @@ import copy
 import math
 
 df = pd.read_csv("preprocessed_dataset.csv")
-features = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status", "occupation", "relationship", "race", "sex",
+features = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status", "occupation", "relationship",
+            "race", "sex",
             "capital-gain", "capital-loss", "hours-per-week", "native-country"]
-
-# hyperparameters
-depth_threshold = 4
 
 
 class Node:
@@ -69,7 +67,7 @@ def GINI_spilt(parent):
     return gini_split
 
 
-def Build_DT(root, unexpanded_features, depth):
+def Build_DT(root, unexpanded_features, depth, threshold):
     labels = df["income"]
     class1 = 0
     class2 = 0
@@ -79,7 +77,7 @@ def Build_DT(root, unexpanded_features, depth):
         else:
             class2 += 1
 
-    if depth >= depth_threshold or len(unexpanded_features) == 0 or class1 == 0 or class2 == 0:
+    if depth >= threshold or len(unexpanded_features) == 0 or class1 == 0 or class2 == 0:
         root.children = None
         if class1 > class2:
             root.label = "<=50K"
@@ -112,7 +110,7 @@ def Build_DT(root, unexpanded_features, depth):
     unexpanded_features_copy.remove(feature_to_expand)
 
     for child in root.children:
-        Build_DT(child, unexpanded_features_copy, depth + 1)
+        Build_DT(child, unexpanded_features_copy, depth + 1, threshold)
 
 
 def Predict(node, record):
@@ -149,13 +147,43 @@ def PrintDT(root):
         PrintDT(child)
 
 
+def F1_score(records, dt):
+    true_positives = 0
+    false_positives = 0
+    false_negatives = 0
+    for record_id in records:
+        label = df["income"][record_id]
+        predicted_label = Predict(dt, df.iloc(0)[record_id])
+        if label == ">50K":
+            if predicted_label == ">50K":
+                true_positives += 1
+            else:
+                false_negatives += 1
+        else:
+            if predicted_label == ">50K":
+                false_positives += 1
+
+    if (true_positives + false_positives) == 0:
+        p = 0
+    else:
+        p = true_positives / (true_positives + false_positives)
+    if (true_positives + false_negatives) == 0:
+        r = 0
+    else:
+        r = true_positives / (true_positives + false_negatives)
+    if p == 0 or r == 0:
+        f1 = 0
+    else:
+        f1 = (p * r) / (p + r)
+    return [p, r, f1]
+
+
 if __name__ == "__main__":
     # # build tree
-    # train_set = []
-    # for i in range(math.floor(0.8 * len(df))):
-    #     train_set.append(i)
+    # train_set = np.arange(math.floor(0.8 * len(df)))
     # root_node = Node(train_set, None, None)
-    # Build_DT(root_node, features, 0)
+    # depth_threshold = 5
+    # Build_DT(root_node, features, 0, depth_threshold)
     #
     # # saving the built model into a file
     # with open("decision_tree.pkl", "wb") as file:
@@ -167,54 +195,68 @@ if __name__ == "__main__":
         decision_tree = pickle.load(file)
         file.close()
 
-    # cross validation testing and hyperparameter setting
-    # cross_validation_set = []
-    # for i in range(math.floor(0.8 * len(df)), math.floor(0.9 * len(df))):
-    #     cross_validation_set.append(i)
+    test_set = np.arange(math.floor(0.8 * len(df)), len(df))
+    results = F1_score(test_set, decision_tree)
+
+    print("precision:", results[0])
+    print("recall", results[1])
+    print("f1 score", results[2])
+
+    # 10-fold cross validation testing
+    # cross_validation_set_size = math.floor(0.1 * len(df))
+    # ultimate_depth_threshold = -1
+    # average_precision = 0
+    # average_recall = 0
+    # average_f1_score = 0
     #
-    # true_positives = 0
-    # false_positives = 0
-    # false_negatives = 0
-    # for record_id in cross_validation_set:
-    #     label = df["income"][record_id]
-    #     predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
-    #     if label == ">50K":
-    #         if predicted_label == ">50K":
-    #             true_positives += 1
+    # for i in range(9):
+    #     train_set = np.append(np.arange(i * cross_validation_set_size),
+    #                           np.arange((i + 2) * cross_validation_set_size, len(df)), axis=0)
+    #     cross_validation_set = np.arange(i * cross_validation_set_size, (i + 1) * cross_validation_set_size)
+    #     test_set = np.arange((i + 1) * cross_validation_set_size, (i + 2) * cross_validation_set_size)
+    #     biggest_f1_score = -np.inf
+    #
+    #     for j in range(len(features)):
+    #         depth_threshold = j
+    #         root_node = Node(train_set, None, None)
+    #         Build_DT(root_node, features, 0, depth_threshold)
+    #
+    #         results = F1_score(cross_validation_set, root_node)
+    #         precision = results[0]
+    #         recall = results[1]
+    #         f1_score = results[2]
+    #
+    #         if f1_score >= biggest_f1_score:
+    #             biggest_f1_score = f1_score
+    #             ultimate_depth_threshold = depth_threshold
     #         else:
-    #             false_negatives += 1
-    #     else:
-    #         if predicted_label == ">50K":
-    #             false_positives += 1
-    # precision = true_positives / (true_positives + false_positives)
-    # recall = true_positives / (true_positives + false_negatives)
-    # f1_score = (precision * recall) / (precision + recall)
-    # print("precision:", precision)
-    # print("recall:", recall)
-    # print("f1 score:", f1_score)
-
-    # test set evaluation
-    test_set = []
-    for i in range(math.floor(0.9 * len(df)), len(df)):
-        test_set.append(i)
-
-    true_positives = 0
-    false_positives = 0
-    false_negatives = 0
-    for record_id in test_set:
-        label = df["income"][record_id]
-        predicted_label = Predict(decision_tree, df.iloc(0)[record_id])
-        if label == ">50K":
-            if predicted_label == ">50K":
-                true_positives += 1
-            else:
-                false_negatives += 1
-        else:
-            if predicted_label == ">50K":
-                false_positives += 1
-    precision = 100 * true_positives / (true_positives + false_positives)
-    recall = 100 * true_positives / (true_positives + false_negatives)
-    f1_score = (precision * recall) / (precision + recall)
-    print("precision:", precision)
-    print("recall:", recall)
-    print("f1 score:", f1_score)
+    #             break
+    #
+    #         print("round:", i)
+    #         print("depth threshold:", j)
+    #         print("precision:", precision)
+    #         print("recall:", recall)
+    #         print("f1 score:", f1_score)
+    #         print("/////////////////////////////////////////////////////////////")
+    #
+    #     depth_threshold = ultimate_depth_threshold
+    #     root_node = Node(train_set, None, None)
+    #     Build_DT(root_node, features, 0, depth_threshold)
+    #     results = F1_score(test_set, root_node)
+    #     average_precision += results[0]
+    #     average_recall += results[1]
+    #     average_f1_score += results[2]
+    #
+    #     print("end of round:", i)
+    #     print("depth:", depth_threshold)
+    #     print("precision:", results[0])
+    #     print("recall:", results[1])
+    #     print("f1 score:", results[2])
+    #     print("////////////////////////////////////////////////////////////////")
+    #
+    # average_precision /= 9
+    # average_recall /= 9
+    # average_f1_score /= 9
+    # print("average precision:", average_precision)
+    # print("average recall:", average_recall)
+    # print("average f1 score", average_f1_score)
