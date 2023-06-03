@@ -137,16 +137,6 @@ def Predict(node, record):
         return ">50K"
 
 
-def PrintDT(root):
-    if root.label is not None:
-        print(root.label)
-        return
-
-    print(root.attribute)
-    for child in root.children:
-        PrintDT(child)
-
-
 def F1_score(records, dt):
     true_positives = 0
     false_positives = 0
