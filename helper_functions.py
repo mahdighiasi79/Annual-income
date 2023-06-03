@@ -24,35 +24,35 @@ def HasMissingValue(attribute):
     return False
 
 
-def InformativeValues(attribute):
-    df = pd.read_csv("preprocessed_data.csv")
-    records = len(df)
-    diag_1 = np.array(df[attribute])
-    labels = np.array(df["readmitted"])
-    l1 = (labels == ">30")
-    l2 = (labels == "<30")
-    l = l1 + l2
-
-    values = ExtractValues(attribute)
-    informative_values = {}
-    for key in values.keys():
-        value = (diag_1 == key)
-        n_276 = np.sum(value, axis=0, keepdims=False)
-        p = value * l
-        p = np.sum(p, axis=0, keepdims=False)
-        p /= n_276
-        p *= 100
-        informative_values[key] = p
-    print(values)
-    print(informative_values)
-
-    information = {}
-    for value in informative_values.keys():
-        informativeness = (values[value] / records) * 100 * pow(abs(informative_values[value] - 50), 2)
-        information[value] = informativeness
-        print(value, informativeness)
-    sorted_informativeness = sorted(information.values())
-    print(sorted_informativeness)
+# def InformativeValues(attribute):
+#     df = pd.read_csv("preprocessed_data.csv")
+#     records = len(df)
+#     diag_1 = np.array(df[attribute])
+#     labels = np.array(df["readmitted"])
+#     l1 = (labels == ">30")
+#     l2 = (labels == "<30")
+#     l = l1 + l2
+#
+#     values = ExtractValues(attribute)
+#     informative_values = {}
+#     for key in values.keys():
+#         value = (diag_1 == key)
+#         n_276 = np.sum(value, axis=0, keepdims=False)
+#         p = value * l
+#         p = np.sum(p, axis=0, keepdims=False)
+#         p /= n_276
+#         p *= 100
+#         informative_values[key] = p
+#     print(values)
+#     print(informative_values)
+#
+#     information = {}
+#     for value in informative_values.keys():
+#         informativeness = (values[value] / records) * 100 * pow(abs(informative_values[value] - 50), 2)
+#         information[value] = informativeness
+#         print(value, informativeness)
+#     sorted_informativeness = sorted(information.values())
+#     print(sorted_informativeness)
 
     # while True:
     #     query = input()
